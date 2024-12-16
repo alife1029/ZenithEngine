@@ -7,6 +7,8 @@
 #include <fstream>
 #include <regex>
 #include <map>
+#include <unordered_map>
+#include <random>
 
 #include <Windows.h>
 
