@@ -16,6 +16,8 @@ file (GLOB ENGINE_PROJECT_SOURCES	src/**.h
 									src/Zenith/Renderer/**.h
 									src/Zenith/Renderer/**.cpp
 									src/Zenith/Renderer/UI/**.h
+									src/Zenith/ResourceManagement/**.h
+									src/Zenith/ResourceManagement/**.cpp
 									src/Zenith/Renderer/UI/**.cpp
 									src/Zenith/Utils/**.h
 									src/Zenith/Utils/**.cpp
