@@ -6,6 +6,7 @@ project(ZenithEngine VERSION 0.0.1)
 add_subdirectory(vendor/glad)
 add_subdirectory(vendor/stb)
 add_subdirectory(vendor/imgui)
+add_subdirectory(vendor/yaml-cpp)
 
 # Source files
 file (GLOB ENGINE_PROJECT_SOURCES	src/**.h
@@ -33,6 +34,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE	vendor/glad/include
 													vendor/imgui
 													vendor/openal/include
 													vendor/sndfile/include
+													vendor/yaml-cpp/include
 													src/)
 
 target_link_directories(${PROJECT_NAME} PRIVATE	vendor/freetype/lib
@@ -43,6 +45,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE	glad
 												stb
 												opengl32
 												imgui
+												yaml-cpp
 												${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/vendor/freetype/lib/freetype.lib
 												${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/vendor/openal/lib/OpenAL32.lib
 												${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/vendor/sndfile/lib/sndfile.lib)
@@ -63,3 +66,13 @@ add_custom_command(	TARGET ${PROJECT_NAME} POST_BUILD
 					${CMAKE_SOURCE_DIR}/${PROJECT_NAME}/vendor/sndfile/dll/
 					${CMAKE_BINARY_DIR}/${PROJECT_NAME}/dll/
 					)
+
+# Tools
+project(ZenithPacker VERSION 0.0.1)
+file(GLOB ZENITH_PACKER_PROJECT_SOURCES	tools/ZenithPacker/src/**.h
+										tools/ZenithPacker/src/**.cpp)
+add_executable(${PROJECT_NAME} ${ZENITH_PACKER_PROJECT_SOURCES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ZenithEngine yaml-cpp stb)
+target_include_directories(${PROJECT_NAME} PRIVATE	src 
+													vendor/yaml-cpp/include
+													vendor/stb/include)
