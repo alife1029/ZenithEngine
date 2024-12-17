@@ -11,6 +11,7 @@
 struct Asset 
 {
 	uint64_t uuid; 
+	uint64_t size;
 	uint32_t offset;
 	uint16_t fileIndex;
 	uint16_t assetType;
@@ -67,7 +68,7 @@ int main(int argc, char** argv)
 		ofs.write(reinterpret_cast<char*>(&header), sizeof(header));
 
 		// Write body
-		for (Asset asset : assets)
+		for (Asset& asset : assets)
 		{
 			ofs.write(reinterpret_cast<char*>(&asset), sizeof(asset));
 		}
@@ -183,6 +184,7 @@ void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType,
 
 			Asset asset = {
 				strtoull(_id.c_str(), &pEnd, 16),
+				static_cast<uint64_t>(buffer.size()),
 				static_cast<uint32_t>(offset),
 				static_cast<uint16_t>(fileIndex),
 				assetType
