@@ -5,17 +5,18 @@
 #include <vector>
 #include <filesystem>
 #include <Zenith/Utils/UUID.h>
+#include <Zenith/ResourceManagement/Asset.h>
 #include <yaml-cpp/yaml.h>
 
 struct Asset 
 {
 	uint64_t uuid; 
-	std::string file;
 	uint32_t offset;
 	uint16_t fileIndex;
+	uint16_t assetType;
 };
 
-void Pack(std::string& manifestVersion, YAML::Node& section, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets);
+void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets);
 
 int main(int argc, char** argv)
 {
@@ -37,23 +38,52 @@ int main(int argc, char** argv)
 	std::string fileVersion = manifest["version"].as<std::string>();
 	std::cout << "Manifest file version: " << fileVersion << std::endl;
 
-	// Parse manifest file
+	// Package assets
 	if (fileVersion == "0.0.1")
 	{
 		std::vector<Asset> assets;
 
-		Pack(fileVersion, manifest["audio_assets"], dir, dir + "/out/audio", "audiopack", assets);
-		std::cout << "Audio Assets Packed!" << std::endl;
-		Pack(fileVersion, manifest["font_assets"], dir, dir + "/out/fonts", "fontpack", assets);
-		std::cout << "Font Assets Packed!" << std::endl;
-		Pack(fileVersion, manifest["texture2d_assets"], dir, dir + "/out/textures", "texturepack", assets);		
+#pragma region Packing assets
+		Pack(fileVersion, manifest["texture2d_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Texture2D), dir, dir + "/out/textures", "texturepack", assets);
 		std::cout << "Texture2D Assets Packed!" << std::endl;
+		Pack(fileVersion, manifest["audio_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Audio), dir, dir + "/out/audio", "audiopack", assets);
+		std::cout << "Audio Assets Packed!" << std::endl;
+		Pack(fileVersion, manifest["font_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Font), dir, dir + "/out/fonts", "fontpack", assets);
+		std::cout << "Font Assets Packed!" << std::endl;
+#pragma endregion
+
+#pragma region Manifest file
+		// Create manifest file for asset indexing
+		std::ofstream ofs(dir + "/out/resources.bin", std::ios::out | std::ios::binary);
+
+		struct ManifestHeader
+		{
+			uint64_t resourcesBinVersion;
+			uint64_t assetCount;
+		} header { 1, assets.size() };
+		
+		// Write header
+		ofs.write(reinterpret_cast<char*>(&header), sizeof(header));
+
+		// Write body
+		for (Asset asset : assets)
+		{
+			ofs.write(reinterpret_cast<char*>(&asset), sizeof(asset));
+		}
+
+		int eof = EOF;
+		ofs.write(reinterpret_cast<char*>(&eof), sizeof(eof)); // Write EOF
+
+		ofs.close();
+
+		std::cout << "Manifest file generated!" << std::endl;
+#pragma endregion
 	}
 
 	return 0;
 }
 
-void Pack(std::string& manifestVersion, YAML::Node& section, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets)
+void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets)
 {
 	if (manifestVersion == "0.0.1")
 	{
@@ -67,22 +97,19 @@ void Pack(std::string& manifestVersion, YAML::Node& section, const std::string& 
 		for (YAML::iterator node = section.begin(); node != section.end(); node++)
 		{
 			std::string _id = node->first.as<std::string>();
-			char* pEnd;
+			char* pEnd = nullptr;
 
-			Asset asset = {
-				strtoull(_id.c_str(), &pEnd, 16),
-				node->second["file"].as<std::string>()
-			};
+			std::string resFileName = node->second["file"].as<std::string>();
 
 			// Read the file content
-			std::ifstream inFile(manifestDir + "/" + asset.file, std::ios::binary | std::ios::ate);
+			std::ifstream inFile(manifestDir + "/" + resFileName, std::ios::binary | std::ios::ate);
 			std::streamsize inFileSize = inFile.tellg();
 			inFile.seekg(0, std::ios::beg);
 			std::vector<char> buffer(inFileSize);
 			if (!inFile.read(buffer.data(), inFileSize))
 			{
 				// FAILED TO READ FILE
-				std::cout << "Failed to read resource file!\nFile: " << manifestDir << "/" << asset.file << std::endl;
+				std::cout << "Failed to read resource file!\nFile: " << manifestDir << "/" << resFileName << std::endl;
 				inFile.close();
 				continue;
 			}
@@ -107,8 +134,13 @@ void Pack(std::string& manifestVersion, YAML::Node& section, const std::string& 
 				goto write_package;
 			}
 
-			asset.offset = static_cast<uint32_t>(offset);
-			asset.fileIndex = static_cast<uint16_t>(fileIndex);
+			Asset asset = {
+				strtoull(_id.c_str(), &pEnd, 16),
+				static_cast<uint32_t>(offset),
+				static_cast<uint16_t>(fileIndex),
+				assetType
+			};
+			
 			assets.push_back(asset);
 
 			// Increment the offset

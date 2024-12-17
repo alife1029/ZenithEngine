@@ -11,7 +11,9 @@ namespace Zenith
 	public:
 		enum class Type
 		{
-			Texture2D = 1
+			Texture2D	= 1,
+			Audio		= 2,
+			Font		= 3
 		};
 
 		operator Zenith::UUID() const;
