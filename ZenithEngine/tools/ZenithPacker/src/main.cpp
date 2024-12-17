@@ -16,23 +16,24 @@ struct Asset
 	uint16_t assetType;
 };
 
+int ParseArgs(int argc, char** argv, std::string& inputDir, std::string& outputDir);
 void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets);
 
 int main(int argc, char** argv)
 {
 	std::cout << "Zenith Asset Packer v0.0.1" << std::endl;
 
-	if (argc < 2)
-	{
-		std::cout << "Assets folder root must be specified!" << std::endl;
-		return -1;
-	}
+	std::string inputDir, outDir;
 
-	std::string dir = argv[1];
-	std::cout << "Directory about to pack: " << dir << std::endl;
+	// Command-line arguments
+	if (!ParseArgs(argc, argv, inputDir, outDir))
+		return -1;
+	
+	std::cout << "Directory about to pack: " << inputDir << std::endl
+		<< "Output directory: " << outDir << std::endl;
 
 	// Open resource manifest file
-	YAML::Node manifest = YAML::LoadFile(dir + "/resources.yaml");
+	YAML::Node manifest = YAML::LoadFile(inputDir + "/resources.yaml");
 
 	// Get file version
 	std::string fileVersion = manifest["version"].as<std::string>();
@@ -44,17 +45,17 @@ int main(int argc, char** argv)
 		std::vector<Asset> assets;
 
 #pragma region Packing assets
-		Pack(fileVersion, manifest["texture2d_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Texture2D), dir, dir + "/out/textures", "texturepack", assets);
+		Pack(fileVersion, manifest["texture2d_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Texture2D), inputDir, outDir + "/textures", "texturepack", assets);
 		std::cout << "Texture2D Assets Packed!" << std::endl;
-		Pack(fileVersion, manifest["audio_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Audio), dir, dir + "/out/audio", "audiopack", assets);
+		Pack(fileVersion, manifest["audio_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Audio), inputDir, outDir + "/audio", "audiopack", assets);
 		std::cout << "Audio Assets Packed!" << std::endl;
-		Pack(fileVersion, manifest["font_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Font), dir, dir + "/out/fonts", "fontpack", assets);
+		Pack(fileVersion, manifest["font_assets"], static_cast<uint16_t>(Zenith::Asset::Type::Font), inputDir, outDir + "/fonts", "fontpack", assets);
 		std::cout << "Font Assets Packed!" << std::endl;
 #pragma endregion
 
 #pragma region Manifest file
 		// Create manifest file for asset indexing
-		std::ofstream ofs(dir + "/out/resources.bin", std::ios::out | std::ios::binary);
+		std::ofstream ofs(outDir + "/resources.bin", std::ios::out | std::ios::binary);
 
 		struct ManifestHeader
 		{
@@ -81,6 +82,50 @@ int main(int argc, char** argv)
 	}
 
 	return 0;
+}
+
+int ParseArgs(int argc, char** argv, std::string& inputDir, std::string& outputDir)
+{
+	inputDir = "";
+	outputDir = "";
+
+	if (argc < 2)
+	{
+	root_not_specified:
+		std::cout << "Assets folder root must be specified!" << std::endl;
+		return 0;
+	}
+	else
+	{
+		for (int i = 0; i < argc; i++)
+		{
+			if (argc > i + 1)
+			{
+				std::string arg = std::string(argv[i]);
+
+				if (arg.compare("-i") == 0 || arg.compare("--i") == 0 || arg.compare("-in") == 0 || arg.compare("--in") == 0)
+				{
+					inputDir = argv[i + 1];
+				}
+				else if (arg.compare("-o") == 0 || arg.compare("--o") == 0 || arg.compare("-out") == 0 || arg.compare("--out") == 0)
+				{
+					outputDir = argv[i + 1];
+				}
+			}
+		}
+	}
+
+	if (inputDir == "")
+	{
+		goto root_not_specified;
+	}
+
+	if (outputDir == "")
+	{
+		outputDir = inputDir + "/out";
+	}
+
+	return 1;
 }
 
 void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets)
