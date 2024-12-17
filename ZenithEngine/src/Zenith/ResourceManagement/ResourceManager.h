@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Zenith/Utils/UUID.h"
+#include "Asset.h"
+#include <string>
 
 namespace Zenith
 {

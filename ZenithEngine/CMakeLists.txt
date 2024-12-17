@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.8)
 
 project(ZenithEngine VERSION 0.0.1)
 
@@ -76,3 +76,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ZenithEngine yaml-cpp stb)
 target_include_directories(${PROJECT_NAME} PRIVATE	src 
 													vendor/yaml-cpp/include
 													vendor/stb/include)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)

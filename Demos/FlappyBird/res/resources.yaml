@@ -1,0 +1,34 @@
+version: 0.0.1
+
+audio_assets:
+  5ad080298809b2bd:
+    file: audio/die.ogg
+  c0130269e70e98d3:
+    file: audio/hit.ogg
+  1fa0efd4caf93195:
+    file: audio/point.ogg
+  11eb43284e05968c:
+    file: audio/swoosh.ogg
+  509a52709632374a:
+    file: audio/theme.mp3
+  7abe4abc4dc1deba:
+    file: audio/wing.ogg
+
+font_assets:
+  f4585941c09c5374:
+    file: fonts/PixelifySans.ttf
+  a58073b270903d7b:
+    file: fonts/Righteous.ttf
+    
+texture2d_assets:
+  3cbe0e91781f741e:
+    file: sprites/background-day.png
+  822087d0f07f06e7:
+    file: sprites/pipe-green.png
+  99d9fa989b2bee20:
+    file: sprites/yellowbird-downflap.png
+  e6a0c985dc320242:
+    file: sprites/yellowbird-midflap.png
+  4525d381b15851fb:
+    file: sprites/yellowbird-upflap.png
+        
