@@ -30,7 +30,7 @@ The `resources.bin` file forms of two sections: **header** and **body**.
   *  Package File Index
   *  Asset Type
 
-**Note:** An asset's offset value cannot exceed 4,294,967,295 bytes (4 GB) because the ofset value is stored in 32-bit unsigned integer variable. If the offset is about to exceed this limit when packing, the current package file is finalized and the packer begis packing the remaining assets into another package file. Hence, the offset value stays within limits and the file index value is incremented.
+**Note:** An asset's offset value cannot exceed 4,294,967,295 bytes (4 GB) because the offset value is stored in 32-bit unsigned integer variable. If the offset is about to exceed this limit when packing, the current package file is finalized and the packer begis packing the remaining assets into another package file. Hence, the offset value stays within limits and the file index value is incremented.
 
 #### Output Folder Structure:
 ```
