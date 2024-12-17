@@ -15,6 +15,8 @@ struct Asset
 	uint16_t fileIndex;
 };
 
+void Pack(std::string& manifestVersion, YAML::Node& section, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets);
+
 int main(int argc, char** argv)
 {
 	std::cout << "Zenith Asset Packer v0.0.1" << std::endl;
@@ -39,17 +41,30 @@ int main(int argc, char** argv)
 	if (fileVersion == "0.0.1")
 	{
 		std::vector<Asset> assets;
-		std::ofstream outPackageFile;
-		uint64_t offset = 0;
+
+		Pack(fileVersion, manifest["audio_assets"], dir, dir + "/out/audio", "audiopack", assets);
+		std::cout << "Audio Assets Packed!" << std::endl;
+		Pack(fileVersion, manifest["font_assets"], dir, dir + "/out/fonts", "fontpack", assets);
+		std::cout << "Font Assets Packed!" << std::endl;
+		Pack(fileVersion, manifest["texture2d_assets"], dir, dir + "/out/textures", "texturepack", assets);		
+		std::cout << "Texture2D Assets Packed!" << std::endl;
+	}
+
+	return 0;
+}
+
+void Pack(std::string& manifestVersion, YAML::Node& section, const std::string& manifestDir, const std::string& outFileDir, const std::string& outFileName, std::vector<Asset>& assets)
+{
+	if (manifestVersion == "0.0.1")
+	{
+		// Create output folder
+		std::filesystem::create_directories(outFileDir);
+
+		std::ofstream outPackageFile(outFileDir + "/" + outFileName + "0.bin", std::ios::out | std::ios::binary);
 		uint64_t fileIndex = 0;
+		uint64_t offset = 0;
 
-		// Create output folders
-		std::filesystem::create_directories(dir + "/out/audio");
-
-#pragma region Packing audio assets
-		YAML::Node& audio_assets = manifest["audio_assets"];
-		outPackageFile = std::ofstream(dir + "/out/audio/audiopack0.bin", std::ios::out | std::ios::binary | std::ios::ate);
-		for (YAML::iterator node = audio_assets.begin(); node != audio_assets.end(); node++)
+		for (YAML::iterator node = section.begin(); node != section.end(); node++)
 		{
 			std::string _id = node->first.as<std::string>();
 			char* pEnd;
@@ -60,14 +75,14 @@ int main(int argc, char** argv)
 			};
 
 			// Read the file content
-			std::ifstream inFile(dir + "/" + asset.file, std::ios::binary | std::ios::ate);
+			std::ifstream inFile(manifestDir + "/" + asset.file, std::ios::binary | std::ios::ate);
 			std::streamsize inFileSize = inFile.tellg();
 			inFile.seekg(0, std::ios::beg);
 			std::vector<char> buffer(inFileSize);
 			if (!inFile.read(buffer.data(), inFileSize))
 			{
 				// FAILED TO READ FILE
-				std::cout << "Failed to read audio file!\nFile: " << dir << "/" << asset.file << std::endl;
+				std::cout << "Failed to read resource file!\nFile: " << manifestDir << "/" << asset.file << std::endl;
 				inFile.close();
 				continue;
 			}
@@ -86,8 +101,8 @@ int main(int argc, char** argv)
 				outPackageFile.close();
 				offset = 0;
 				std::ostringstream oss;
-				oss << dir << "/out/audio/audiopack" << ++fileIndex << ".bin";
-				outPackageFile = std::ofstream(oss.str(), std::ios::out | std::ios::binary | std::ios::ate);
+				oss << outFileDir << "/" << outFileName << ++fileIndex << ".bin";
+				outPackageFile = std::ofstream(oss.str(), std::ios::out | std::ios::binary);
 
 				goto write_package;
 			}
@@ -100,11 +115,6 @@ int main(int argc, char** argv)
 			offset += static_cast<uint64_t>(inFileSize);
 		}
 
-		std::cout << "Audio Assets Packed!" << std::endl;
-
 		outPackageFile.close();
-#pragma endregion
 	}
-
-	return 0;
 }
