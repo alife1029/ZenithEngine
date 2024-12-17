@@ -125,6 +125,8 @@ void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType,
 			else
 			{
 				// Create a new package file
+				int eof = EOF;
+				outPackageFile.write(reinterpret_cast<char*>(&eof), sizeof(eof)); // Write EOF
 				outPackageFile.close();
 				offset = 0;
 				std::ostringstream oss;
@@ -147,6 +149,8 @@ void Pack(std::string& manifestVersion, YAML::Node& section, uint16_t assetType,
 			offset += static_cast<uint64_t>(inFileSize);
 		}
 
+		int eof = EOF;
+		outPackageFile.write(reinterpret_cast<char*>(&eof), sizeof(eof)); // Write EOF
 		outPackageFile.close();
 	}
 }
